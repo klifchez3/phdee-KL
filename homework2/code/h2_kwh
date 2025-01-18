@@ -1,0 +1,23 @@
+# phd-ee homework 2 - python script for kwh analysis
+# kelly lifchez
+# 01/20/2025
+
+# import libraries 
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+
+# Set working directories and seed
+
+inputpath = r'/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework2/data/raw'
+outputpath = r'/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework2/output'
+
+#setting same seed as homework 1 for consistency 
+np.random.seed(6578103)
+
+# Load data
+df = pd.read_csv(os.path.join(inputpath, 'kwh.csv'))
+
