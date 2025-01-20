@@ -1,0 +1,76 @@
+
+
+# # Iterate over each column (excluding the 'retrofit' column)
+# for column in df.columns:
+#     if column != 'retrofit':
+#         variable_names.append(column)
+        
+#         # Calculate means and standard deviations
+#         control_mean = control_group[column].mean()
+#         control_std = control_group[column].std()
+#         treatment_mean = treatment_group[column].mean()
+#         treatment_std = treatment_group[column].std()
+        
+#         control_means_stds.append(f"{control_mean:.2f}\n({control_std:.2f})")
+#         treatment_means_stds.append(f"{treatment_mean:.2f}\n({treatment_std:.2f})")
+        
+#         # Perform two-way t-test
+#         t_stat, p_value = stats.ttest_ind(control_group[column], treatment_group[column], equal_var=False)
+#         p_values.append(p_value)
+
+# variable_names = [name.replace('electricity','Electricity').replace('sqft', 'Square Feet').replace('temp', 'Temperature').title() for name in variable_names]
+
+# # Create a DataFrame to display the results
+# results_df = pd.DataFrame({
+#     'Control Mean (SD)': control_means_stds,
+#     'Treatment Mean (SD)': treatment_means_stds,
+#     'P-value': p_values
+# }, index=variable_names)
+
+# # check results
+# print(results_df)
+
+# os.chdir(outputpath) # Output directly to LaTeX folder
+# results_df.to_latex('balancetable_py.tex', index=False)
+
+# # Optionally, save the results to a CSV file
+# results_df.to_csv(os.path.join(outputpath, 'summary_statistics.csv'), index=False)
+
+
+# # Generate a table of means and standard deviations for the observed variables
+# means_control = control_group.mean()
+# stdev_control = control_group.std()
+# means_treatment = treatment_group.mean()
+# stdev_treatment = treatment_group.std()
+
+# # Get number of observations
+# nobs_control = control_group.shape[0]
+# nobs_treatment = treatment_group.shape[0]
+
+# # Set the row and column names
+# rownames = pd.concat([pd.Series(['Electricity','Square Feet','Temperature', 'Observations']),pd.Series([' ',' ',' '])],axis = 1).stack() # Note this stacks an empty list to make room for stdevs
+# colnames = [('Mean','(s.d.)')] # Two rows of column names
+
+# rownames = pd.concat([pd.Series(variable_names), pd.Series(['Observations'])], axis=0)
+# colnames = pd.MultiIndex.from_tuples([('Control Mean', '(s.d.)'), ('Treatment Mean', '(s.d.)')])
+
+# # Format means and std devs to display to two decimal places
+# means_control = means_control.map('{:.2f}'.format)
+# stdev_control = stdev_control.map('({:.2f})'.format)
+# means_treatment = means_treatment.map('{:.2f}'.format)
+# stdev_treatment = stdev_treatment.map('({:.2f})'.format)
+
+# # Align std deviations under means and add observations
+# col_control = pd.concat([means_control, stdev_control, pd.Series(f"{int(nobs_control)}")], axis=0).stack()
+# col_treatment = pd.concat([means_treatment, stdev_treatment, pd.Series(f"{int(nobs_treatment)}")], axis=0).stack()
+
+# # Combine control and treatment columns
+# summary_table = pd.concat([col_control, col_treatment], axis=1)
+# summary_table.index = rownames
+# summary_table.columns = colnames
+
+# # Output to LaTeX folder
+# summary_table.to_latex('samplemeantable.tex')
+
+# # Optionally, save the summary table to a CSV file
+# summary_table.to_csv('samplemeantable.csv')
