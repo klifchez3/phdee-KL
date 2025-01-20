@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
 import scipy.stats as sc
+import scipy.optimize as opt
 
 # Set working directories and seed
 
@@ -71,7 +72,6 @@ control_std = control_std.map('({:.2f})'.format)
 treatment_std = treatment_std.map('({:.2f})'.format)
 p_val = p_val.map('{:.2f}'.format)
 
-
 # set up rows and columns
 rowlist = varlist + ['Observations']
 
@@ -111,75 +111,68 @@ print(balancetable.to_latex())
 os.chdir(outputpath) 
 balancetable.to_latex('py_balancetable.tex')
 
-
-############################################################################################################
-# Plot a histogram of the outcome variable -----------------------------------
-sns.displot(yvar,kind='kde',legend = False)
-plt.xlabel('Outcome variable')
-plt.legend(labels = ['Distribution of outcome variable'],loc = 'best',bbox_to_anchor = (0.75,-0.1))
-plt.savefig('samplehist.pdf',format='pdf') # I suggest saving to .pdf for highest quality
-plt.show()
-
+# --------------------------------------------------------------
 ### Question 2 
-# Plot a histogram of the outcome variable -----------------------------------
-sns.displot(yvar,kind='kde',legend = False)
-plt.xlabel('Outcome variable')
-plt.legend(labels = ['Distribution of outcome variable'],loc = 'best',bbox_to_anchor = (0.75,-0.1))
-plt.savefig('samplehist.pdf',format='pdf') # I suggest saving to .pdf for highest quality
-plt.show()
-sns.distplot(kwh[ kwh[ 'retrofit' ] == 0 ]['electricity'], hist=False, label='Did not receive retrofit')
-sns.distplot(kwh[ kwh[ 'retrofit' ] == 1 ]['electricity'], hist=False, label='Received retrofit')
-plt.xlabel('Electricity use (KwH)')
-plt.savefig('treatmenthist.pdf',format='pdf') # I suggest saving to .pdf for highest quality
+
+# kernel density plot - using kdeplot instead of displot because displot figures are not turning out as expected
+sns.kdeplot(df[ df[ 'retrofit' ] == 0 ]['electricity']) 
+sns.kdeplot(df[ df[ 'retrofit' ] == 1 ]['electricity'])
+plt.xlabel('kWh')
+plt.legend(labels = ['Non-retrofitted households','Retrofitted households'], loc='best', bbox_to_anchor=(1, 1))
+plt.savefig('kdensity.pdf',format='pdf') # I suggest saving to .pdf for highest quality
 plt.show()
 
+#--------------------------------------------------------------
 ### Question 3
+## Part (a) - by hand using NumPy Arrays
 
-## Part (a)
-### Set up Numpy matrices for OLS:
-Yvar = kwh['electricity'].to_numpy()
-nobsa, = Yvar.shape
-constant = np.ones((nobsa,1)) # Vector of ones for the constant
-Xvar = kwh.drop('electricity',axis = 1).to_numpy()
-Xvar = np.concatenate([constant,Xvar],axis = 1) # Add the constant
+# Set up NumPy matrices for OLS:
 
-### Run the regression
-betaolsa = np.matmul(np.linalg.inv((np.matmul(Xvar.T, Xvar))), np.matmul(Xvar.T, Yvar))
+# convert electricity column to numpy array
+Array_Y = df['electricity'].to_numpy()
+# assigns number of rows to `nrows` (shape returns a tuple representing dimensions of array, comma after nrows restricts to first item in tuple which is # of rows)
+nrows_a, = Array_Y.shape
+constant = np.ones((nrows_a,1)) # Vector of ones for constant
+Array_X = df.drop('electricity',axis = 1).to_numpy() #remove electricity column
+Array_X = np.concatenate([constant,Array_X],axis = 1) # Add constant
 
-## Part (b)
-### Set up objective function
+# Run ols regression - Array_X is inputs/design matrix & Array_Y is output/response variable
+olsest_a = np.matmul(np.linalg.inv((np.matmul(Array_X.T, Array_X))), np.matmul(Array_X.T, Array_Y)) #.T gives transpose of matrix
 
+## Part (b) - using scipy.optimize
+
+# Set up objective function
 def my_leastsq(beta,Y,X):
     return np.sum((Y-np.matmul(X,beta))**2)
 
 ### Set up the solver
-betaolsb = opt.minimize(my_leastsq,np.array([0,1,1,1]).T, args = (Yvar, Xvar)).x # I had to play with the initial conditions to get it to converge
-nobsb, = Yvar.shape
+olsest_b = opt.minimize(my_leastsq,np.array([0,1,1,1]).T, args = (Array_Y, Array_X)).x 
+nrows_b, = Array_Y.shape
 
-## Part (c)
-### Simply call the statsmodels function.  Now there is an (arguably) easier way to do this using R-style syntax with an equation.
-olsc = sm.OLS(kwh['electricity'],Xvar).fit()
-betaolsc = olsc.params.to_numpy()
-nobsc = olsc.nobs
+## Part (c) - using statsmodels function.
+ols_c = sm.OLS(df['electricity'],Array_X).fit()
+olsest_c = ols_c.params.to_numpy()
+nrows_c = ols_c.nobs
 
-## Output table
+# ## Output table
 
-### Row and column names
-xvarlist = ['Constant', 'Sqft', 'Retrofit', 'Temperature','Observations']
+# ### Row and column names
+varnames_q3 = ['Constant', 'Sqft', 'Retrofit', 'Temperature','Observations']
 
-rownames3 = pd.Series(xvarlist)
-colnames3 = pd.Series(['(a)','(b)','(c)'])
+rownames_q3 = pd.Series(varnames_q3)
+colnames_q3 = pd.Series(['(a)','(b)','(c)'])
 
-### Put outputs and observations together
-outputtable3 = pd.DataFrame((np.append(betaolsa,nobsa),np.append(betaolsb,nobsb),np.append(betaolsc,nobsc))).T
-outputtable3.index = rownames3
-outputtable3.columns = colnames3
+# append OLS estimates and number of observations, then set index and column names
+resultstable = pd.DataFrame({
+    '(a)': np.append(olsest_a, nrows_a),
+    '(b)': np.append(olsest_b, nrows_b),
+    '(c)': np.append(olsest_c, nrows_c)
+}, index=rownames_q3)
+resultstable = resultstable.reindex(index = ['Retrofit', 'Sqft', 'Temperature', 'Constant','Observations'])
 
-outputtable3 = outputtable3.reindex(index = ['Retrofit', 'Sqft', 'Temperature', 'Constant','Observations'])
+# Format output values to display three decimal places and change order
+resultstable[colnames_q3] = resultstable[colnames_q3].applymap(lambda x: f"{x:.3f}")
+resultstable.loc['Observations', colnames_q3] = resultstable.loc['Observations', colnames_q3].astype(float).astype(int)
+print(resultstable)
 
-### Format to three decimal places and change order
-for z in colnames3 :
-    outputtable3[z] = outputtable3[z].map('{:.3f}'.format)
-    outputtable3.loc['Observations',z] = "{0:.0f}".format(float(outputtable3.loc['Observations',z])) # This cannot be the most efficient or elegant way to do this.
-
-outputtable3.to_latex('outputtable3.tex')
+resultstable.to_latex('resultstable.tex')
