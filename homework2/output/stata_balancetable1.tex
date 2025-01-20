@@ -1,0 +1,15 @@
+{\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi} \begin{tabular}{l*{3}{cc}} \hline
+                    &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}\\
+                    &\multicolumn{1}{c}{Treated}&\multicolumn{1}{c}{Controls}&\multicolumn{1}{c}{Difference}\\
+                    &     Mean/SD&     Mean/SD&Diff./p-value  \\
+\hline
+electricity         &    1,181.33&    1,086.75&       94.58**\\
+                    &    (454.31)&    (423.96)&      (0.00)  \\
+sqft                &    1,633.05&    1,657.55&      -24.50  \\
+                    &    (682.90)&    (686.27)&      (0.57)  \\
+temp                &       79.89&       79.89&       -0.00  \\
+                    &      (2.16)&      (1.97)&      (0.99)  \\
+ & & & \\
+Observations        &         501&         499&       1,000  \\
+obs                 &            &            &              \\
+\hline \multicolumn{4}{c}{ *** p$<$0.01, ** p$<$0.05, * p$<$0.1} \\ \end{tabular} }
