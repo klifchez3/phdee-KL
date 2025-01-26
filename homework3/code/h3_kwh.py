@@ -146,10 +146,10 @@ outputtable4.to_latex('outputtable4.tex')
 low = np.array(ame[1:3] - lb_ame[1:3])
 high = np.array(ub_ame[1:3] - ame[1:3])
 
-plt.errorbar(y = mfx4[1:3], x = np.arange(2), yerr = [low,high], fmt= 'o', capsize = 5)
+plt.errorbar(y = ame[1:3], x = np.arange(2), yerr = [low,high], fmt= 'o', capsize = 5)
 plt.ylabel('df')
 plt.xticks(np.arange(2),['Sq ft', 'Temperature'])
 plt.xlim((-0.5,1.5)) # Scales the figure more nicely
 plt.axhline(linewidth=2, color='r')
-plt.savefig('mfx.pdf',format='pdf')
+plt.savefig('ame.pdf',format='pdf')
 plt.show()
