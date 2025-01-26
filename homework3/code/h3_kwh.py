@@ -87,7 +87,7 @@ for r in range(reps):
     
     ### Get average marginal effect as before
     ame_b = np.zeros((log_Y_rows,4))
-    ame_b[:,1] = beta_ols_list[r,1]*Y_b*(X-b[:,1]**(-1)) 
+    ame_b[:,1] = beta_ols_list[r,1]*Y_b*(X_b[:,1]**(-1)) 
     ame_b[:,3] = beta_ols_list[r,3]*Y_b*(X_b[:,3]**(-1)) 
     delta_b = np.exp(beta_ols_list[r,2]) 
     ame_b[:,2] = ((delta_b-1)*Y_b)*((delta_b**X_b[:,2])**(-1))
@@ -108,11 +108,11 @@ ub = ub[order]
 beta_ols = beta_ols[order]
 lb_ame = lb_ame[order]
 ub_ame = ub_ame[order]
-ame = ame[order] #change to ame
+ame = ame[order] 
 
 ### Row and column names
-rownames4 = pd.concat([pd.Series(['retrofit', 'ln(sqft)', 'ln(temp)', 'Constant', 'Observations']),pd.Series([' ',' ',' ',' ',])],axis = 1).stack()
-colnames4 = pd.Series(['Coefficients','Marginal effects (dy/dx)'])
+rownames = pd.concat([pd.Series(['retrofit', 'ln(sqft)', 'ln(temp)', 'Constant', 'Observations']),pd.Series([' ',' ',' ',' ',])],axis = 1).stack()
+colnames = pd.Series(['Coefficients','Marginal effects (dy/dx)'])
 
 ### Format confidence intervals
 lb = pd.Series(np.round(lb,2)) # Rounds to two decimal places and puts into a Series
@@ -134,13 +134,13 @@ col0 = pd.concat([beta_ols,ci],axis = 1).stack()
 col1 = pd.concat([ame,ci_ame],axis = 1).stack()
 
 ### Output
-outputtable4 = pd.concat([col0,col1],axis = 1)
-outputtable4.index = rownames4
-outputtable4.columns = colnames4
+outputtable = pd.concat([col0,col1],axis = 1)
+outputtable.index = rownames
+outputtable.columns = colnames
 
-print(outputtable4)
+print(outputtable)
 
-outputtable4.to_latex('outputtable4.tex')
+outputtable.to_latex('outputtable.tex')
 
 ## Build plot
 low = np.array(ame[1:3] - lb_ame[1:3])
