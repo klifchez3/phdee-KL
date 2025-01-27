@@ -118,20 +118,17 @@ colnames = pd.Series(['Coefficients','Marginal effects (dy/dx)'])
 # Format confidence intervals
 lb = pd.Series(np.round(lb,2)) # Rounds to two decimal places and puts into a Series
 ub = pd.Series(np.round(ub,2))
-lb_ame = pd.Series(np.round(lb_ame,2))
-ub_ame = pd.Series(np.round(ub_ame,2))
+lb_ame = pd.Series(np.round(lb_ame,2)).round(2)
+ub_ame = pd.Series(np.round(ub_ame,2)).round(2)
 
-# ci = '(' + lb.map(str) + ', ' + ub.map(str) + ')'
-# ci_ame = '(' + lb_ame.map(str) + ', ' + ub_ame.map(str) + ')'
-# ci_ame.iloc[3] = ' ' 
 
 ci = pd.Series([f'({l}, {u})' for l, u in zip(lb, ub)])
 ci_ame = pd.Series([f'({l}, {u})' for l, u in zip(lb_ame, ub_ame)])
 ci_ame.at[3] = ' '
 
 # Format estimates and append observations
-beta_ols = pd.Series(np.append(np.round(beta_ols,2),log_Y_rows))
-ame = pd.Series(np.append(np.round(ame,2),log_Y_rows))
+beta_ols = pd.Series(np.append(np.round(beta_ols,2),log_Y_rows)).round(2)
+ame = pd.Series(np.append(np.round(ame,2),log_Y_rows)).round(2)
 ame.at[3] = ' ' 
 
 # Stack estimates over confidence intervals
@@ -145,10 +142,11 @@ outputtable.columns = colnames
 
 print(outputtable)
 
+
 outputtable.to_latex(os.path.join(outputpath, 'outputtable.tex'))
 
 ### Question 1.f. - Graph AME with confidence intervals
-
+#%%
 ## Build plot
 low = np.abs(np.array(lb_ame[1:3] - ame[1:3]))
 high = np.abs(np.array(ub_ame[1:3] - ame[1:3]))
@@ -156,7 +154,7 @@ high = np.abs(np.array(ub_ame[1:3] - ame[1:3]))
 plt.errorbar(x=np.arange(2), y=ame[1:3], yerr=[low, high], fmt='o', capsize=5)
 plt.ylabel('average marginal effect on kWh')
 plt.xticks(np.arange(2), ['Square Feet', 'Temperature'])
-plt.xlim((-0.5,1.5)) # Scales the figure more nicely
+plt.xlim((-0.5,1.5)) # scaling
 plt.axhline(linewidth=2, color='r')
 plt.savefig(os.path.join(outputpath, 'ame_plot.png'))
 plt.show()
