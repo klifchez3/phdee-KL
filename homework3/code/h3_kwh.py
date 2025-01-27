@@ -145,7 +145,7 @@ outputtable.columns = colnames
 
 print(outputtable)
 
-outputtable.to_latex('outputpath/outputtable.tex')
+outputtable.to_latex(os.path.join(outputpath, 'outputtable.tex'))
 
 ### Question 1.f. - Graph AME with confidence intervals
 
@@ -158,5 +158,5 @@ plt.ylabel('df')
 plt.xticks(np.arange(2), ['Sq ft', 'Temperature'])
 plt.xlim((-0.5,1.5)) # Scales the figure more nicely
 plt.axhline(linewidth=2, color='r')
-plt.savefig('ame.pdf',format='pdf')
+plt.savefig(os.path.join(outputpath, 'plot.png'))
 plt.show()
