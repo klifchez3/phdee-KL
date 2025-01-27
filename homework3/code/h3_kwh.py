@@ -154,9 +154,9 @@ low = np.abs(np.array(lb_ame[1:3] - ame[1:3]))
 high = np.abs(np.array(ub_ame[1:3] - ame[1:3]))
 
 plt.errorbar(x=np.arange(2), y=ame[1:3], yerr=[low, high], fmt='o', capsize=5)
-plt.ylabel('df')
-plt.xticks(np.arange(2), ['Sq ft', 'Temperature'])
+plt.ylabel('average marginal effect on kWh')
+plt.xticks(np.arange(2), ['Square Feet', 'Temperature'])
 plt.xlim((-0.5,1.5)) # Scales the figure more nicely
 plt.axhline(linewidth=2, color='r')
-plt.savefig(os.path.join(outputpath, 'plot.png'))
+plt.savefig(os.path.join(outputpath, 'ame_plot.png'))
 plt.show()
