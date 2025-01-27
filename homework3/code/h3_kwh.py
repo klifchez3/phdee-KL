@@ -145,7 +145,7 @@ outputtable.columns = colnames
 
 print(outputtable)
 
-outputtable.to_latex('outputtable.tex')
+outputtable.to_latex('outputpath/outputtable.tex')
 
 ### Question 1.f. - Graph AME with confidence intervals
 
