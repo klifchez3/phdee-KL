@@ -145,7 +145,6 @@ olsest_a = np.matmul(np.linalg.inv((np.matmul(Array_X.T, Array_X))), np.matmul(A
 def my_leastsq(beta,Y,X):
     return np.sum((Y-np.matmul(X,beta))**2)
 
-### Set up the solver
 olsest_b = opt.minimize(my_leastsq,np.array([0,1,1,1]).T, args = (Array_Y, Array_X)).x 
 nrows_b, = Array_Y.shape
 
@@ -154,9 +153,9 @@ ols_c = sm.OLS(df['electricity'],Array_X).fit()
 olsest_c = ols_c.params.to_numpy()
 nrows_c = ols_c.nobs
 
-# ## Output table
+# Output table
 
-# ### Row and column names
+# Row and column names
 varnames_q3 = ['Constant', 'Sqft', 'Retrofit', 'Temperature','Observations']
 
 rownames_q3 = pd.Series(varnames_q3)
