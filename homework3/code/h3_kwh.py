@@ -125,8 +125,8 @@ ub_ame = pd.Series(np.round(ub_ame,2))
 # ci_ame = '(' + lb_ame.map(str) + ', ' + ub_ame.map(str) + ')'
 # ci_ame.iloc[3] = ' ' 
 
-ci = lb.apply(lambda x: f'({x}, {ub[lb.index.get_loc(x)]})')
-ci_ame = lb_ame.apply(lambda x: f'({x}, {ub_ame[lb_ame.index.get_loc(x)]})')
+ci = pd.Series([f'({l}, {u})' for l, u in zip(lb, ub)])
+ci_ame = pd.Series([f'({l}, {u})' for l, u in zip(lb_ame, ub_ame)])
 ci_ame.at[3] = ' '
 
 # Format estimates and append observations
@@ -150,12 +150,12 @@ outputtable.to_latex('outputtable.tex')
 ### Question 1.f. - Graph AME with confidence intervals
 
 ## Build plot
-low = np.array(ame[1:3] - lb_ame[1:3])
-high = np.array(ub_ame[1:3] - ame[1:3])
+low = np.abs(np.array(lb_ame[1:3] - ame[1:3]))
+high = np.abs(np.array(ub_ame[1:3] - ame[1:3]))
 
-plt.errorbar(y = ame[1:3], x = np.arange(2), yerr = [low,high], fmt= 'o', capsize = 5)
+plt.errorbar(x=np.arange(2), y=ame[1:3], yerr=[low, high], fmt='o', capsize=5)
 plt.ylabel('df')
-plt.xticks(np.arange(2),['Sq ft', 'Temperature'])
+plt.xticks(np.arange(2), ['Sq ft', 'Temperature'])
 plt.xlim((-0.5,1.5)) # Scales the figure more nicely
 plt.axhline(linewidth=2, color='r')
 plt.savefig('ame.pdf',format='pdf')
