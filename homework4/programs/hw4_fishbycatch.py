@@ -46,7 +46,7 @@ for treated in [0, 1]:
     label = "Treated" if treated == 1 else "Control"
     plt.plot(subset['month'], subset['bycatch'], marker='o', linestyle='-', label=f"{label} group")
 
-plt.axvline(x=12.5, color='r', linestyle='--')
+plt.axvline(x=12.5, color='g', linestyle='--')
 plt.xlabel("Month")
 plt.ylabel("Pounds of Bycatch")
 plt.legend(bbox_to_anchor=(0.85, 0.94), loc='upper center')

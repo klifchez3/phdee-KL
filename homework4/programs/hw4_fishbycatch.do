@@ -77,15 +77,18 @@ reg demeaned_bycatch demeaned_treatment demeaned_shrimp demeaned_salmon demeaned
 est store col2
     
 * Create a table to display the estimates for Column A and Column B
-estout col1 col2 using ///
-    "$outputpath/did_regression_stata.tex", cells(b(fmt(%9.3f) star) se(par fmt(%9.3f))) ///
-    starlevels(* .1 ** .05 *** .01) style(tex) ///
+esttab col1 col2 using "$outputpath/did_regression_stata.tex", ///
+    cells(b(fmt(%9.3f) star) se(par fmt(%9.3f))) ///
+    starlevels(* .1 ** .05 *** .01) ///
+    label ///
     keep(treatment shrimp salmon demeaned_treatment demeaned_shrimp demeaned_salmon) ///
-    mlabels(, dep) collabels(,none) ///
+    mlabels("Bycatch" "Demeaned Bycatch") ///
+    collabels("Direct FE" "Within-Transformation") ///
+    addnotes("Standard errors in parentheses") ///
+    nonotes ///
+    replace
 
 // Display the output path
 display "Saving table to: $outputpath/did_regression_stata.tex"
-
-
 
 
