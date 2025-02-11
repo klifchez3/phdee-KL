@@ -70,18 +70,21 @@ plt.show()
 ### Question 2: Difference-in-Differences Estimation 
 
 # %%
-# Compute DID estimate
+## Calculate DID estimates
 
+#Treated group
 pre_treated = grouped_fishbycatch[(grouped_fishbycatch["year"] == 2017) & (grouped_fishbycatch['month'] == 12) & (grouped_fishbycatch['treated'] == 1)]['bycatch'].values[0]
 post_treated = grouped_fishbycatch[(grouped_fishbycatch["year"] == 2018) & (grouped_fishbycatch['month'] == 13) & (grouped_fishbycatch['treated'] == 1)]['bycatch'].values[0]
+
+#Control group
 pre_control = grouped_fishbycatch[(grouped_fishbycatch["year"] == 2017) & (grouped_fishbycatch['month'] == 12) & (grouped_fishbycatch['treated'] == 0)]['bycatch'].values[0]
 post_control = grouped_fishbycatch[(grouped_fishbycatch["year"] == 2018) & (grouped_fishbycatch['month'] == 13) & (grouped_fishbycatch['treated'] == 0)]['bycatch'].values[0]
 
 DID = (post_treated - pre_treated) - (post_control - pre_control)
 
-did_estimate = f"{DID:.2f}"
-did_df = pd.DataFrame([did_estimate], columns=["DID Estimate"])
-did_tab = did_df.to_latex(index=False, escape=False, multicolumn=False)
+did_estimate = f"{DID:.2f}" #formats estimate to 2 decimal places and stores as string
+did_df = pd.DataFrame([did_estimate], columns=["DID Estimate"]) #one column named DID Estimate and one row with formatted value
+did_tab = did_df.to_latex(index=False, escape=False, multicolumn=False) #convert to latex
 output_path = os.path.join(outputpath, "did_estimate.tex") 
 with open(output_path, "w") as f:
     f.write(did_tab)
@@ -92,20 +95,20 @@ with open(output_path, "w") as f:
 df_long['post'] = (df_long['year'] == 2018).astype(int)
 df_long['pre'] = (df_long['year'] == 2017).astype(int)
 
-df_long['treat_post'] = df_long['treated'] * df_long['post']
+df_long['treatment'] = df_long['treated'] * df_long['post']
 
 # a) Two-period DID
 fishbycatch_two_period = df_long[(df_long['year'] == 2017) & (df_long['month'] == 12) | (df_long['year'] == 2018) & (df_long['month'] == 13)]
-model_a = smf.ols("bycatch ~ pre + treated + treat_post", data=fishbycatch_two_period).fit(cov_type='cluster', cov_kwds={'groups': fishbycatch_two_period['firm']})
+a = smf.ols("bycatch ~ pre + treated + treatment", data=fishbycatch_two_period).fit(cov_type='cluster', cov_kwds={'groups': fishbycatch_two_period['firm']})
 
 # b) Full-period DID
-model_b = smf.ols("bycatch ~ C(month) + treated + treat_post", data=df_long).fit(cov_type='cluster', cov_kwds={'groups': df_long['firm']})
+b = smf.ols("bycatch ~ C(month) + treated + treatment", data=df_long).fit(cov_type='cluster', cov_kwds={'groups': df_long['firm']})
 
 # c) Full sample with controls
-model_c = smf.ols("bycatch ~ C(month) + treated + treat_post + firmsize + shrimp + salmon", data=df_long).fit(cov_type='cluster', cov_kwds={'groups': df_long['firm']})
+c = smf.ols("bycatch ~ C(month) + treated + treatment + firmsize + shrimp + salmon", data=df_long).fit(cov_type='cluster', cov_kwds={'groups': df_long['firm']})
 
 # d) Regression table
-reg_table = sm_summary.summary_col([model_a, model_b, model_c], stars=True, float_format='%0.3f', model_names=["(a)", "(b)", "(c)"], 
+reg_table = sm_summary.summary_col([a, b, c], stars=True, float_format='%0.3f', model_names=["(a)", "(b)", "(c)"], 
                                        info_dict={'Observations': lambda x: f"{int(x.nobs)}"})
 reg_str = reg_table.as_latex().split("\n")
 month_idx = []
