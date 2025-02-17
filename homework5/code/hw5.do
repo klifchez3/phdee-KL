@@ -87,16 +87,13 @@ replace treatment_daily = treatment_daily > 0
 // Generate the new treatment cohort variable
 egen daily_cohort = group(id) if treatment_daily == 1
 
-// Save the new dataset
-save "$outputpath/daily_data.dta", replace
-
 // Generate day
 sort date 
-egen day=seq(), by(id)
+egen day = seq(), by(id)
 
 // Generate cohort 
-bysort id treatment: egen first_treated=min(day) if treatment==1
-bysort id (first_treated): replace first_treated=first_treated[1] if missing(first_treated)
+bysort id treatment : egen first = min(day) if treatment == 1
+bysort id (first): replace first = first[1] if missing(first)
 
 // Save daily data
 save "$outputpath/energy_staggered_day.dta", replace
@@ -111,96 +108,75 @@ esttab using "$outputpath/daily_twfe.tex", label replace ///
 	coeflabels(treatment "ATT" relativehumidity "Relative Humidity (\%)" temperature "Temperature (F)" precipitation "Precipitation (in)" ) ///
 		ar2 sfmt(%8.2f)
 
-// Event Study Manual
+// Event Study
 use "$inputpath/energy_staggered_day.dta", clear
 
 // Create event_time variable
 gen event_time = day - first_treated
-	
+
 // Make dummies for period and omit -1 period
 char event_time[omit] -1
 xi i.event_time, pref(_T)
-	
-// Position of -2
+
+// Define positions
 local pos_of_neg_2 = 28 
-
-// Position of 0
 local pos_of_zero = `pos_of_neg_2' + 2
-
-// Position of max
 local pos_of_max = `pos_of_zero' + 29
 
 // Event study
-reghdfe energy  _T* temperature precipitation relativehumidity, absorb(id) vce(cluster id)
-	forvalues i = 1(1)`pos_of_neg_2'{
-		scalar b_`i' = _b[_Tevent_tim_`i']
-		scalar se_v2_`i' = _se[_Tevent_tim_`i']
-	}
-		
+reghdfe energy _T* temperature precipitation relativehumidity, absorb(id) vce(cluster id)
 
-	forvalues i = `pos_of_zero'(1)`pos_of_max'{
-		scalar b_`i' = _b[_Tevent_tim_`i']
-		scalar se_v2_`i' = _se[_Tevent_tim_`i']
-	}
+// Extract coefficients and standard errors
+forvalues i = 1/`pos_of_max' {
+    if `i' <= `pos_of_neg_2' | `i' >= `pos_of_zero' {
+        scalar b_`i' = _b[_Tevent_tim_`i']
+        scalar se_v2_`i' = _se[_Tevent_tim_`i']
+    }
+}
 
-	capture drop order
-	capture drop b 
-	capture drop high 
-	capture drop low
+// Drop existing variables if they exist
+capture drop order b high low
 
-	gen order = .
-	gen b =. 
-	gen high =. 
-	gen low =.
+// Generate new variables
+gen order = .
+gen b = .
+gen high = .
+gen low = .
 
-	local i = 1
-	local graph_start  = 1
-	forvalues day = 1(1)`pos_of_neg_2'{
-		local event_time = `day' - 2 - `pos_of_neg_2'
-		replace order = `event_time' in `i'
-		
-		replace b    = b_`day' in `i'
-		replace high = b_`day' + 1.96*se_v2_`day' in `i'
-		replace low  = b_`day' - 1.96*se_v2_`day' in `i'
-			
-		local i = `i' + 1
-	}
+// Fill in the variables
+local i = 1
+forvalues day = 1/`pos_of_max' {
+    if `day' <= `pos_of_neg_2' | `day' >= `pos_of_zero' {
+        local event_time = `day' - 2 - `pos_of_neg_2'
+        replace order = `event_time' in `i'
+        replace b = b_`day' in `i'
+        replace high = b_`day' + 1.96 * se_v2_`day' in `i'
+        replace low = b_`day' - 1.96 * se_v2_`day' in `i'
+        local i = `i' + 1
+    }
+}
 
-	replace order = -1 in `i'
+// Add the omitted period
+replace order = -1 in `i'
+replace b = 0 in `i'
+replace high = 0 in `i'
+replace low = 0 in `i'
 
-	replace b    = 0  in `i'
-	replace high = 0  in `i'
-	replace low  = 0  in `i'
+return list
 
-	local i = `i' + 1
-	forvalues day = `pos_of_zero'(1)`pos_of_max'{
-		local event_time = `day' - 2 - `pos_of_neg_2'
+// Plot the results
+twoway rarea low high order if order <= 29 & order >= -29, fcol(gs14) lcol(white) msize(1) ///
+    || connected b order if order <= 29 & order >= -29, lw(0.6) col(white) msize(1) msymbol(s) lp(solid) ///
+    || connected b order if order <= 29 & order >= -29, lw(0.2) col("71 71 179") msize(1) msymbol(s) lp(solid) ///
+    || scatteri 0 -29 0 29, recast(line) lcol(gs8) lp(longdash) lwidth(0.5) ///
+    xlab(-30(10)30, nogrid labsize(2) angle(0)) ///
+    ylab(, nogrid labs(3)) ///
+    legend(off) ///
+    xtitle("Day since receiving treatment", size(5)) ///
+    ytitle("Daily energy consumption (kWh)", size(5)) ///
+    xline(-.5, lpattern(dash) lcolor(gs7) lwidth(0.6))
 
-		replace order = `event_time' in `i'
-		
-		replace b    = b_`day' in `i'
-		replace high = b_`day' + 1.96*se_v2_`day' in `i'
-		replace low  = b_`day' - 1.96*se_v2_`day' in `i'
-			
-		local i = `i' + 1
-	}
-
-
-	return list
-
-twoway rarea low high order if order<=29 & order >= -29 , fcol(gs14) lcol(white) msize(1) /// estimates
-		|| connected b order if order<=29 & order >= -29, lw(0.6) col(white) msize(1) msymbol(s) lp(solid) /// highlighting
-		|| connected b order if order<=29 & order >= -29, lw(0.2) col("71 71 179") msize(1) msymbol(s) lp(solid) /// connect estimates
-		|| scatteri 0 -29 0 29, recast(line) lcol(gs8) lp(longdash) lwidth(0.5) /// zero line 
-			xlab(-30(10)30 ///
-					, nogrid labsize(2) angle(0)) ///
-			ylab(, nogrid labs(3)) ///
-			legend(off) ///
-			xtitle("Day since receiving treatment", size(5)) ///
-			ytitle("Daily energy consumption (kWh)", size(5)) ///
-			xline(-.5, lpattern(dash) lcolor(gs7) lwidth(0.6)) 	
-			
-graph export "$outputpath/event_study.pdf", replace 
+graph export "$outputpath/event_study.pdf", replace
 	
 	
 // Event Study Using eventdd
