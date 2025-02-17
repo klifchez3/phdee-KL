@@ -74,6 +74,9 @@ save "$inputpath/energy_staggered_hourly.dta", replace
 use "$inputpath/energy_staggered_hourly.dta", clear
 
 **** Something wrong! Need to check original data. Should not have cases where devicegroup = 0 and treatment = 1. Returning to this later. 	
+
+** Set Up 
+
 gen day = dofc(time)
 format day %td
 
@@ -98,6 +101,8 @@ bysort id (first): replace first = first[1] if missing(first)
 // Save daily data
 save "$outputpath/energy_staggered_day.dta", replace
 
+** 1. Estimate the treatment effect using household fixed effects and daily indicators
+
 // TWFE DiD
 eststo: reghdfe energy treatment temperature precipitation relativehumidity, absorb(date id) vce(cluster id)
 
@@ -107,6 +112,8 @@ esttab using "$outputpath/daily_twfe.tex", label replace ///
 	mtitles("Energy consumption (kWh)") collabel(none) star(* 0.10 ** 0.05 *** 0.01) nonum ///
 	coeflabels(treatment "ATT" relativehumidity "Relative Humidity (\%)" temperature "Temperature (F)" precipitation "Precipitation (in)" ) ///
 		ar2 sfmt(%8.2f)
+
+** 2. Estimate an event study using the reghdfe command
 
 // Event Study
 use "$inputpath/energy_staggered_day.dta", clear
@@ -176,13 +183,14 @@ twoway rarea low high order if order <= 29 & order >= -29, fcol(gs14) lcol(white
     ytitle("Daily energy consumption (kWh)", size(5)) ///
     xline(-.5, lpattern(dash) lcolor(gs7) lwidth(0.6))
 
-graph export "$outputpath/event_study.pdf", replace
+graph export "$outputpath/es_reghdfe.pdf", replace
 	
-	
+** 3. Estimate the treatment effect using the eventdd command
+
 // Event Study Using eventdd
 eventdd energy temperature precipitation relativehumidity, hdfe absorb(id) timevar(event_time) cluster(id) graph_op(ytitle("Daily energy consumption (kWh)", size(5)) xlabel(-30(10)30) xtitle("Day since receiving treatment", size(5)))
 	
-graph export "outputpath/eventstudy_canned.pdf", replace 
+graph export "outputpath/es_eventdd.pdf", replace 
 	
 
 twoway rarea low high order if order<=29 & order >= -29 , fcol(gs14) lcol(white) msize(1) /// estimates
@@ -197,6 +205,8 @@ twoway rarea low high order if order<=29 & order >= -29 , fcol(gs14) lcol(white)
 			ytitle("Daily energy consumption", size(5)) ///
 			xline(-.5, lpattern(dash) lcolor(gs7) lwidth(0.6)) 			
 graph export "$outputpath/eventdd.pdf", replace 
+
+** 4. Estimate the treatment effect using the csdid command
 
 // Callaway Sant'Anna DiD
 csdid energy temperature precipitation relativehumidity, ivar(id) time (day) gvar(first_treated) wboot reps(50)
