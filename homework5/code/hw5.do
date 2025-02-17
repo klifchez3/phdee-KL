@@ -7,10 +7,15 @@
 clear
 set more off 
 
-cd "/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework5"
+//cd "/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework5"
+cd "C:\Users\klifchez3\GaTech Dropbox\Kelly Lifchez\phdee-KL\homework5"
 
-global inputpath "/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework5/data"
-global outputpath "/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework5/output"
+//global inputpath "/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework5/data"
+//global outputpath "/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework5/output"
+
+global inputpath "C:\Users\klifchez3\GaTech Dropbox\Kelly Lifchez\phdee-KL\homework5\data"
+global outputpath "C:\Users\klifchez3\GaTech Dropbox\Kelly Lifchez\phdee-KL\homework5\output"
+
 
 //ssc install twowayfeweights, replace //pretty sure this is same package as fetwowayweights, according to https://github.com/chaisemartinPackages/twowayfeweights?tab=readme-ov-file 
 //ssc install reghdfe, replace
