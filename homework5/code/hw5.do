@@ -99,7 +99,7 @@ bysort id treatment: egen first_treated=min(day) if treatment==1
 bysort id (first_treated): replace first_treated=first_treated[1] if missing(first_treated)
 
 // Save daily data
-save "C:\Users\sellison8\Dropbox\phdee\hw6\energy_staggered_day.dta", replace
+save "$outputpath/energy_staggered_day.dta", replace
 
 // TWFE DiD
 eststo: reghdfe energy treatment temperature precipitation relativehumidity, absorb(date id) vce(cluster id)
@@ -112,7 +112,7 @@ esttab using "$outputpath/daily_twfe.tex", label replace ///
 		ar2 sfmt(%8.2f)
 
 // Event Study Manual
-use "C:\Users\sellison8\Dropbox\phdee\hw6\energy_staggered_day.dta", clear
+use "$inputpath/energy_staggered_day.dta", clear
 
 // Create event_time variable
 gen event_time = day - first_treated
@@ -200,13 +200,13 @@ twoway rarea low high order if order<=29 & order >= -29 , fcol(gs14) lcol(white)
 			ytitle("Daily energy consumption (kWh)", size(5)) ///
 			xline(-.5, lpattern(dash) lcolor(gs7) lwidth(0.6)) 	
 			
-graph export "C:\Users\sellison8\Dropbox\phdee\hw6\output\event_study.pdf", replace 
+graph export "$outputpath/event_study.pdf", replace 
 	
 	
 // Event Study Using eventdd
 eventdd energy temperature precipitation relativehumidity, hdfe absorb(id) timevar(event_time) cluster(id) graph_op(ytitle("Daily energy consumption (kWh)", size(5)) xlabel(-30(10)30) xtitle("Day since receiving treatment", size(5)))
 	
-graph export "C:\Users\sellison8\Dropbox\phdee\hw6\output\eventstudy_canned.pdf", replace 
+graph export "outputpath/eventstudy_canned.pdf", replace 
 	
 
 twoway rarea low high order if order<=29 & order >= -29 , fcol(gs14) lcol(white) msize(1) /// estimates
@@ -220,14 +220,14 @@ twoway rarea low high order if order<=29 & order >= -29 , fcol(gs14) lcol(white)
 			xtitle("Days since receiving treatment", size(5)) ///
 			ytitle("Daily energy consumption", size(5)) ///
 			xline(-.5, lpattern(dash) lcolor(gs7) lwidth(0.6)) 			
-graph export "C:\Users\sellison8\Dropbox\phdee\hw6\output\eventdd.pdf", replace 
+graph export "$outputpath/eventdd.pdf", replace 
 
 // Callaway Sant'Anna DiD
 csdid energy temperature precipitation relativehumidity, ivar(id) time (day) gvar(first_treated) wboot reps(50)
 estat simple
 estat event
 csdid_plot, ytitle("Daily energy consumption", size(5)) xlabel(-30(10)30) xtitle("Days since treatment", size(5)) xline(-.5, lpattern(dash) lcolor(gs7) lwidth(0.3))
-graph export "C:\Users\sellison8\Dropbox\phdee\hw6\output\\event_study_csdid.pdf", replace
+graph export "$outputpath/event_study_csdid.pdf", replace
 
 //trash
 //Create treatment cohort variable
