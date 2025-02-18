@@ -1,28 +1,19 @@
-{
+\begin{table}[htbp]\centering
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
-\begin{tabular}{l*{3}{c}}
+\caption{TWFE Regression Results}
+\begin{tabular}{l*{1}{c}}
 \hline\hline
-                    &\multicolumn{1}{c}{Energy consumption (kWh)}&\multicolumn{1}{c}{est2}&\multicolumn{1}{c}{est3}\\
+                    &\multicolumn{1}{c}{(1)}\\
+                    &\multicolumn{1}{c}{(sum) energy}\\
 \hline
-ATT                 &     -0.0434\sym{***}&     -0.9566\sym{***}&     -0.9566\sym{***}\\
-                    &    (0.0002)         &    (0.0055)         &    (0.0055)         \\
-[1em]
-Temperature (F)     &      0.0046\sym{***}&      0.1106\sym{***}&      0.1106\sym{***}\\
-                    &    (0.0000)         &    (0.0004)         &    (0.0004)         \\
-[1em]
-Precipitation (in)  &     -0.0006         &      0.1687         &      0.1687         \\
-                    &    (0.0020)         &    (0.1785)         &    (0.1785)         \\
-[1em]
-Relative Humidity (\%)&      0.0023\sym{***}&      0.0551\sym{***}&      0.0551\sym{***}\\
-                    &    (0.0000)         &    (0.0002)         &    (0.0002)         \\
-[1em]
-Constant            &      0.5387\sym{***}&     12.8910\sym{***}&     12.8910\sym{***}\\
-                    &    (0.0011)         &    (0.0331)         &    (0.0331)         \\
+(first) treatment   &      -0.957\sym{**}\\
+                    &     (0.005)        \\
 \hline
-Observations        &      720000         &       30000         &       30000         \\
-Adjusted \(R^{2}\)  &       0.663         &       0.973         &       0.973         \\
+Observations        &       30000        \\
+Adjusted \(R^{2}\)  &       0.973        \\
 \hline\hline
-\multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
-\multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.10\), \sym{**} \(p<0.05\), \sym{***} \(p<0.01\)}\\
+\multicolumn{2}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{2}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{2}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\)}\\
 \end{tabular}
-}
+\end{table}

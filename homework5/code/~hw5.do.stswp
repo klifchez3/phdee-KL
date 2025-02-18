@@ -19,16 +19,6 @@ set more off
 		global outputpath "$dt/output" 
 	}
 
-//cd "/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework5"
-//cd "C:\Users\klifchez3\GaTech Dropbox\Kelly Lifchez\phdee-KL\homework5"
-
-//global inputpath "/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework5/data"
-//global outputpath "/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework5/output"
-
-// global inputpath "C:\Users\klifchez3\GaTech Dropbox\Kelly Lifchez\phdee-KL\homework5\data"
-// global outputpath "C:\Users\klifchez3\GaTech Dropbox\Kelly Lifchez\phdee-KL\homework5\output"
-
-
 ssc install twowayfeweights, replace //pretty sure this is same package as fetwowayweights, according to https://github.com/chaisemartinPackages/twowayfeweights?tab=readme-ov-file 
 ssc install reghdfe, replace
 ssc install csdid
@@ -120,14 +110,17 @@ save "$inputpath/energy_staggered_day.dta", replace
 ** 1. Estimate the treatment effect using household fixed effects and daily indicators
 
 // TWFE DiD
+
+est clear 
+
 eststo: reghdfe energy treatment temperature precipitation relativehumidity, absorb(date id) vce(cluster id)
 
-// Export results
-esttab using "$outputpath/daily_twfe.tex", label replace ///
-	b(4) se(4) ////
-	mtitles("Energy consumption (kWh)") collabel(none) star(* 0.10 ** 0.05 *** 0.01) nonum ///
-	coeflabels(treatment "ATT" relativehumidity "Relative Humidity (\%)" temperature "Temperature (F)" precipitation "Precipitation (in)" ) ///
-		ar2 sfmt(%8.2f)
+// Export results to LaTeX
+esttab using "$outputpath/daily_twfe.tex", se ar2 replace label ///
+    title("TWFE Regression Results") ///
+    b(3) se(3) star(* 0.05 ** 0.01) ///
+    keep(treatment) ///
+    addnotes("Standard errors in parentheses")
 
 ** 2. Estimate an event study using the reghdfe command
 
@@ -142,7 +135,7 @@ xi i.event, pref(_T)
 preserve
 reghdfe energy  _T* temperature precipitation relativehumidity, absorb(id) vce(cluster id)
 estimates store reg1
-coefplot reg1, drop(_cons precipitation relativehumidity temperature) xlabel(0 "-30" 3 "-27" 6 "-24" 9 "-21" 12 "-18" 15 "-15" 18 "-12" 21 "-9" 24 "-6" 27 "-3" 30 "0" 33 "3" 36 "6" 39 "9" 42 "12" 45 "15" 48 "18" 51 "21" 54 "24" 57 "27" 59 "29", labsize(small))  vertical xline(29) recast(rarea) ciopts(recast(rarea) lcolor(gs13) fcolor(gs13)) xtitle("Days relative to device adoption") ytitle("Daily Energy Consumption (kWh)") graphregion(fcolor(white)) plotregion(style(none)) msymbol(circle) mcolor(green) saving("es_coef",replace) 
+coefplot reg1, drop(_cons precipitation relativehumidity temperature) xlabel(3 "-27" 6 "-24" 9 "-21" 12 "-18" 15 "-15" 18 "-12" 21 "-9" 24 "-6" 27 "-3" 30 "0" 33 "3" 36 "6" 39 "9" 42 "12" 45 "15" 48 "18" 51 "21" 54 "24" 57 "27", labsize(mediumsmall))  vertical xline(29) recast(rarea) ciopts(recast(rarea) lcolor(gs13) fcolor(gs13)) xtitle("Days relative to device adoption", size(mediumlarge)) ytitle("Daily Energy Consumption (kWh)", size(mediumlarge)) graphregion(fcolor(white)) plotregion(style(none)) msymbol(circle) mcolor(green) saving("es_coef",replace) 
 graph export "$outputpath/es_coef.pdf", replace
 restore
 
@@ -150,7 +143,7 @@ restore
 ** 3. Estimate the treatment effect using the eventdd command
 
 // Event Study Using eventdd
-eventdd energy temperature precipitation relativehumidity, hdfe absorb(id) timevar(event_time) cluster(id) graph_op(ytitle("Daily Energy Consumption (kWh)", size(medium)) xlabel(-30(3)30) xtitle("Days relative to device adoption", size(medium)))
+eventdd energy temperature precipitation relativehumidity, hdfe absorb(id) timevar(event_time) cluster(id) graph_op(ytitle("Daily Energy Consumption (kWh)", size(mediumlarge)) xlabel(-27(3)27) xtitle("Days relative to device adoption", size(mediumlarge))) ci(rarea)
 	
 graph export "outputpath/es_eventdd.pdf", replace 
 
