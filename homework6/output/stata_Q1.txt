@@ -1,0 +1,14 @@
+		(1)
+VARIABLES	LABELS	Limited Information Maximum Likelihood Estimates using Weight as IV
+		
+mpg	mpg	150.43*
+		(63.05)
+car	car	-4,676.09**
+		(589.70)
+Constant	Constant	17,627.64**
+		(1,772.78)
+		
+Observations		1,000
+R-squared		0.10
+Robust standard errors in parentheses		
+** p<0.01, * p<0.05		
