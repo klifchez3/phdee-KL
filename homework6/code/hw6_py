@@ -45,10 +45,10 @@ first_stage_3a = sm.OLS(yvar_firststage_3a, xvars_firststage_3a).fit()
 firststage_fstat_3a = first_stage_3a.fvalue
 
 # fitted values of mpg from the first stage
-df['mpg_hat'] = first_stage_3a.fittedvalues
+df['mpg_hat_3a'] = first_stage_3a.fittedvalues
 
 # 3a second stage
-xvars_secondstage_3a = df[['mpg_hat', 'car', 'const']]  # using fitted values from the first stage
+xvars_secondstage_3a = df[['mpg_hat_3a', 'car', 'const']]  # using fitted values from the first stage
 yvars_secondstage_3a = df['price']
 
 # Fit the second stage OLS regression model
@@ -62,7 +62,7 @@ print(second_stage_3a.summary())
 #%%%%
 
 ### b) 2SLS using weight squared as the excluded instrument
-weight_sq = df['weight']**2
+df['weight_sq'] = df['weight']**2
 
 xvars_firststage_3b = df[['weight_sq', 'car', 'const']]
 yvar_firststage_3b = df['mpg']
@@ -101,8 +101,8 @@ firststage_fstat_3c = first_stage_3c.fvalue
 # fitted values of mpg from the first stage
 df['mpg_hat_3c'] = first_stage_3c.fittedvalues
 
-# 3b second stage
-xvars_secondstage_3c = df[['mpg_hat_3b', 'car', 'const']]  # using fitted values from the first stage
+# 3c second stage
+xvars_secondstage_3c = df[['mpg_hat_3c', 'car', 'const']]  # using fitted values from the first stage
 yvars_secondstage_3c = df['price']
 
 # Fit the second stage OLS regression model
@@ -113,31 +113,74 @@ nobs_3c = int(second_stage_3c.nobs)
 
 print(second_stage_3c.summary())
 
-#%%%%
-
-## Format output as table
-
+#%%% attemption to fix the code
 # format confidence intervals
 ci_3a_s = '(' + ci_3a.loc[:,0].map(str) + ', ' + ci_3a.loc[:,1].map(str) + ')'
-ci_3b_s = '(' + ci_3b.loc[:,0].map(str) + ', ' + ci_3b.loc[:,1].map(str) + ')' 
+ci_3b_s = '(' + ci_3b.loc[:,0].map(str) + ', ' + ci_3b.loc[:,1].map(str) + ')'
 ci_3c_s = '(' + ci_3c.loc[:,0].map(str) + ', ' + ci_3c.loc[:,1].map(str) + ')'
 
 # make table columns with coefficients and confidence intervals
-output_3a = pd.DataFrame(pd.concat([pd.Series(beta_3a),ci_3a_s],axis = 1).stack())
-output_3b = pd.DataFrame(pd.concat([pd.Series(beta_3b),ci_3b_s],axis = 1).stack())
-output_3c = pd.DataFrame(pd.concat([pd.Series(beta_3c),ci_3c_s],axis = 1).stack())
+output_3a = pd.DataFrame(pd.concat([pd.Series(beta_3a), ci_3a_s], axis=1).stack())
+output_3b = pd.DataFrame(pd.concat([pd.Series(beta_3b), ci_3b_s], axis=1).stack())
+output_3c = pd.DataFrame(pd.concat([pd.Series(beta_3c), ci_3c_s], axis=1).stack())
+
+table_H6_Q3 = pd.concat([output_3a, output_3b, output_3c], axis=1)
+table_H6_Q3.columns = ['(a)', '(b)', '(c)']
+
+# Check the number of rows in the DataFrame
+num_rows = table_H6_Q3.shape[0]
+print(f"Number of rows in the DataFrame: {num_rows}")
 
 # build and format table
-table_H6_Q3 = pd.concat([output_3a,output_3b,output_3c],axis = 1)
-table_H6_Q3.columns = ['(a)','(b)','(c)']
-table_H6_Q3.index = ['Sedan',' ','MPG','','Constant','']
-table_H6_Q3 = table_H6_Q3.append(pd.DataFrame([[str(nobs_3a),str(nobs_3b),str(nobs_3c)], [firststage_fstat_3a,firststage_fstat_3b,firststage_fstat_3c]], index = ['Observations', 'First-Stage F-Stat'], columns = ['(a)', '(b)','(c)']))
+table_H6_Q3 = pd.concat([output_3a, output_3b, output_3c], axis=1)
+table_H6_Q3.columns = ['(a)', '(b)', '(c)']
+table_H6_Q3.index = ['MPGA', ' ', 'Car', ' ', 'Constant', ' ', 'MPGB', '', 'MPGC', '']
 
-#output to latex 
+# Add observations and first-stage F-statistics
+obs_and_fstat = pd.DataFrame(
+    [[str(nobs_3a), str(nobs_3b), str(nobs_3c)], 
+     [firststage_fstat_3a, firststage_fstat_3b, firststage_fstat_3c]], 
+    index=['Observations', 'First-Stage F-Stat'], 
+    columns=['(a)', '(b)', '(c)']
+)
+
+# Append observations and first-stage F-statistics to the table
+table_H6_Q3 = pd.concat([table_H6_Q3, obs_and_fstat])
+
+# Select only the desired columns
+desired_columns = ['(a)', '(b)', '(c)']
+table_H6_Q3 = table_H6_Q3[desired_columns]
+
+# Output to LaTeX
 os.chdir(outputpath)
-table_H6_Q3.to_latex('table_H6_Q3.tex',column_format = 'lccc', na_rep = ' ')
+table_H6_Q3.to_latex('table_H6_Q3.tex', column_format='lccc', na_rep=' ')
 
-#%%%%
+
+# #%%%%
+
+# ## Format output as table
+
+# # format confidence intervals
+# ci_3a_s = '(' + ci_3a.loc[:,0].map(str) + ', ' + ci_3a.loc[:,1].map(str) + ')'
+# ci_3b_s = '(' + ci_3b.loc[:,0].map(str) + ', ' + ci_3b.loc[:,1].map(str) + ')' 
+# ci_3c_s = '(' + ci_3c.loc[:,0].map(str) + ', ' + ci_3c.loc[:,1].map(str) + ')'
+
+# # make table columns with coefficients and confidence intervals
+# output_3a = pd.DataFrame(pd.concat([pd.Series(beta_3a),ci_3a_s],axis = 1).stack())
+# output_3b = pd.DataFrame(pd.concat([pd.Series(beta_3b),ci_3b_s],axis = 1).stack())
+# output_3c = pd.DataFrame(pd.concat([pd.Series(beta_3c),ci_3c_s],axis = 1).stack())
+
+# # build and format table
+# table_H6_Q3 = pd.concat([output_3a,output_3b,output_3c],axis = 1)
+# table_H6_Q3.columns = ['(a)','(b)','(c)']
+# table_H6_Q3.index = ['Sedan',' ','MPG','','Constant','']
+# table_H6_Q3 = table_H6_Q3.append(pd.DataFrame([[str(nobs_3a),str(nobs_3b),str(nobs_3c)], [firststage_fstat_3a,firststage_fstat_3b,firststage_fstat_3c]], index = ['Observations', 'First-Stage F-Stat'], columns = ['(a)', '(b)','(c)']))
+
+# #output to latex 
+# os.chdir(outputpath)
+# table_H6_Q3.to_latex('table_H6_Q3.tex',column_format = 'lccc', na_rep = ' ')
+
+# #%%%%
 
 #### Question 4: Calculate IV estimate using the IVGMM function and weight as instrument ####
  
