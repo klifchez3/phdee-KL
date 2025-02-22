@@ -1,0 +1,146 @@
+# Clear all
+from IPython import get_ipython
+get_ipython().magic('reset -sf')
+
+# Import packages
+import os
+import numpy as np
+import pandas as pd
+import random
+import statsmodels.api as sm
+from linearmodels.iv import IVGMM
+
+# set working directories 
+inputpath = r'/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework6/data'
+outputpath = r'/Users/kellylifchez/GaTech Dropbox/Kelly Lifchez/phdee-KL/homework6/output'
+
+# Set seed
+np.random.seed(6578103)
+
+df = pd.read_csv(os.path.join(inputpath, 'instrumentalvehicles.csv'))
+
+#### Question 1: OLS regression of price on mpg and car ####
+
+from statsmodels.formula.api import ols
+ols_1 = ols('price ~ mpg + car', data=df).fit()
+print(ols_1.summary())
+
+
+#%%%%
+#### Question 3: IV regressions of price on mpg and car ####
+
+### a) 2SLS using weight as the excluded instrument 
+
+## First Stage: regress mpg on all of the instruments
+
+df['const'] = 1 # Add a constant term 
+
+xvars_firststage_3a = df[['weight', 'car', 'const']]
+yvar_firststage_3a = df['mpg']
+
+# Fit the first stage OLS regression model
+first_stage_3a = sm.OLS(yvar_firststage_3a, xvars_firststage_3a).fit()
+
+# Store the first stage F-statistic
+firststage_fstat_3a = first_stage_3a.fvalue
+
+# fitted values of mpg from the first stage
+df['mpg_hat'] = first_stage_3a.fittedvalues
+
+# 3a second stage
+xvars_secondstage_3a = df[['mpg_hat', 'car', 'const']]  # using fitted values from the first stage
+yvars_secondstage_3a = df['price']
+
+# Fit the second stage OLS regression model
+second_stage_3a = sm.OLS(yvars_secondstage_3a, xvars_secondstage_3a).fit()
+beta_3a = np.round(second_stage_3a.params,2)
+ci_3a = pd.DataFrame(np.round(second_stage_3a.conf_int(),2))
+nobs_3a = int(second_stage_3a.nobs)
+
+print(second_stage_3a.summary())
+
+#%%%%
+
+### b) 2SLS using weight squared as the excluded instrument
+weight_sq = df['weight']**2
+
+xvars_firststage_3b = df[['weight_sq', 'car', 'const']]
+yvar_firststage_3b = df['mpg']
+
+first_stage_3b = sm.OLS(yvar_firststage_3b, xvars_firststage_3b).fit()
+
+# Store the first stage F-statistic
+firststage_fstat_3b = first_stage_3b.fvalue
+
+# fitted values of mpg from the first stage
+df['mpg_hat_3b'] = first_stage_3b.fittedvalues
+
+# 3b second stage
+xvars_secondstage_3b = df[['mpg_hat_3b', 'car', 'const']]  # using fitted values from the first stage
+yvars_secondstage_3b = df['price']
+
+# Fit the second stage OLS regression model
+second_stage_3b = sm.OLS(yvars_secondstage_3b, xvars_secondstage_3b).fit()
+beta_3b = np.round(second_stage_3b.params,2)
+ci_3b = pd.DataFrame(np.round(second_stage_3b.conf_int(),2))
+nobs_3b = int(second_stage_3b.nobs)
+
+print(second_stage_3b.summary())
+
+#%%%%
+### c) 2SLS using height as the excluded instrument
+
+xvars_firststage_3c = df[['height', 'car', 'const']]
+yvar_firststage_3c = df['mpg']
+
+first_stage_3c = sm.OLS(yvar_firststage_3c, xvars_firststage_3c).fit()
+
+# Store the first stage F-statistic
+firststage_fstat_3c = first_stage_3c.fvalue
+
+# fitted values of mpg from the first stage
+df['mpg_hat_3c'] = first_stage_3c.fittedvalues
+
+# 3b second stage
+xvars_secondstage_3c = df[['mpg_hat_3b', 'car', 'const']]  # using fitted values from the first stage
+yvars_secondstage_3c = df['price']
+
+# Fit the second stage OLS regression model
+second_stage_3c = sm.OLS(yvars_secondstage_3c, xvars_secondstage_3c).fit()
+beta_3c = np.round(second_stage_3c.params,2)
+ci_3c = pd.DataFrame(np.round(second_stage_3c.conf_int(),2))
+nobs_3c = int(second_stage_3c.nobs)
+
+print(second_stage_3c.summary())
+
+#%%%%
+
+## Format output as table
+
+# format confidence intervals
+ci_3a_s = '(' + ci_3a.loc[:,0].map(str) + ', ' + ci_3a.loc[:,1].map(str) + ')'
+ci_3b_s = '(' + ci_3b.loc[:,0].map(str) + ', ' + ci_3b.loc[:,1].map(str) + ')' 
+ci_3c_s = '(' + ci_3c.loc[:,0].map(str) + ', ' + ci_3c.loc[:,1].map(str) + ')'
+
+# make table columns with coefficients and confidence intervals
+output_3a = pd.DataFrame(pd.concat([pd.Series(beta_3a),ci_3a_s],axis = 1).stack())
+output_3b = pd.DataFrame(pd.concat([pd.Series(beta_3b),ci_3b_s],axis = 1).stack())
+output_3c = pd.DataFrame(pd.concat([pd.Series(beta_3c),ci_3c_s],axis = 1).stack())
+
+# build and format table
+table_H6_Q3 = pd.concat([output_3a,output_3b,output_3c],axis = 1)
+table_H6_Q3.columns = ['(a)','(b)','(c)']
+table_H6_Q3.index = ['Sedan',' ','MPG','','Constant','']
+table_H6_Q3 = table_H6_Q3.append(pd.DataFrame([[str(nobs_3a),str(nobs_3b),str(nobs_3c)], [firststage_fstat_3a,firststage_fstat_3b,firststage_fstat_3c]], index = ['Observations', 'First-Stage F-Stat'], columns = ['(a)', '(b)','(c)']))
+
+#output to latex 
+os.chdir(outputpath)
+table_H6_Q3.to_latex('table_H6_Q3.tex',column_format = 'lccc', na_rep = ' ')
+
+#%%%%
+
+#### Question 4: Calculate IV estimate using the IVGMM function and weight as instrument ####
+ 
+ivest_q4 = IVGMM.from_formula('price ~ 1 + car + [mpg ~ weight]',df).fit() 
+
+print(ivest_q4.summary)
