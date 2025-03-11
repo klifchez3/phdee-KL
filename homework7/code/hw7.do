@@ -38,14 +38,13 @@ import delimited "$in/instrumentalvehicles.csv", clear
 rdrobust mpg length, c(225) p(1) bwselect(mserd)
 
 
-preserve
+
 rdplot mpg length, c(225) p(1) covs(car) genvars ///
 graph_options(ytitle(Miles per Gallon) xtitle(Vehicle Length (in inches)) ///
 legend(position(6)) ///
 title("RDD: Fuel Efficiency and Car Length")) ///
 saving("$out/rdplot_stata_q1.pdf", replace) ///
-export graph "$out/rdplot_stata_q1.pdf", replace
-restore 
+ 
 
 // second stage regression - regress price on predicted mpg and car type 
 regress price rdplot_hat_y car, robust
